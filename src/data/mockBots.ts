@@ -5,6 +5,7 @@ export const mockBots: Bot[] = [
     id: "1",
     name: "Momentum Scalper",
     description: "Bot de scalping rapide basé sur le momentum et les indicateurs de volume",
+    startDate: "2024-01-15",
     code: `def momentum_strategy(data):
     # RSI calculation
     rsi = calculate_rsi(data, period=14)
@@ -40,6 +41,7 @@ export const mockBots: Bot[] = [
     id: "2",
     name: "Mean Reversion Pro",
     description: "Exploite les retours à la moyenne sur les paires majeures",
+    startDate: "2024-01-20",
     code: `def mean_reversion(data):
     # Bollinger Bands
     bb_upper, bb_middle, bb_lower = calculate_bb(data, period=20, std=2)
@@ -75,6 +77,7 @@ export const mockBots: Bot[] = [
     id: "3",
     name: "Trend Follower Elite",
     description: "Suit les tendances de long terme avec confirmation multi-timeframe",
+    startDate: "2024-01-10",
     code: `def trend_following(data):
     # Multiple timeframe analysis
     ema_20 = data['close'].ewm(span=20).mean()
@@ -109,6 +112,7 @@ export const mockBots: Bot[] = [
     id: "4",
     name: "Volatility Hunter",
     description: "Capitalise sur les périodes de forte volatilité",
+    startDate: "2024-01-25",
     code: `def volatility_strategy(data):
     # ATR and volatility metrics
     atr = calculate_atr(data, period=14)

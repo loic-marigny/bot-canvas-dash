@@ -13,6 +13,7 @@
     "pnl": "P&L",
     "winRate": "Win Rate",
     "trades": "Trades",
+    "runningSince": "Actif depuis",
     "viewDetails": "Voir détails"
   },
   "botDetail": {
@@ -24,6 +25,7 @@
     "pnl": "P&L",
     "winRate": "Win Rate",
     "trades": "Trades",
+    "runningSince": "Actif depuis",
     "status": {
       "active": "Actif",
       "paused": "En pause",

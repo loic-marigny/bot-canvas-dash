@@ -1,17 +1,21 @@
 import { Bot } from "@/types/bot";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpRight, ArrowDownRight, TrendingUp, Activity } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, TrendingUp, Activity, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { format } from "date-fns";
+import { fr, enUS } from "date-fns/locale";
 
 interface BotCardProps {
   bot: Bot;
 }
 
 export const BotCard = ({ bot }: BotCardProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isPositive = bot.roi >= 0;
+  const locale = i18n.language === 'fr' ? fr : enUS;
+  const formattedDate = format(new Date(bot.startDate), 'PP', { locale });
   
   const statusColors = {
     active: "bg-success/20 text-success border-success/30",
@@ -34,6 +38,10 @@ export const BotCard = ({ bot }: BotCardProps) => {
               {bot.name}
             </h3>
             <p className="text-sm text-muted-foreground line-clamp-2">{bot.description}</p>
+            <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>{t('botCard.runningSince')} {formattedDate}</span>
+            </div>
           </div>
           <Badge className={statusColors[bot.status]}>
             {statusLabels[bot.status]}

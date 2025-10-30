@@ -9,6 +9,7 @@ export interface Bot {
   winRate: number;
   trades: number;
   status: "active" | "paused" | "stopped";
+  startDate: string;
   performanceData: PerformancePoint[];
 }
 

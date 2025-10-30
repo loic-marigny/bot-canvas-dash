@@ -3,14 +3,17 @@ import { mockBots } from "@/data/mockBots";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, TrendingUp, Activity, DollarSign, Target } from "lucide-react";
+import { ArrowLeft, TrendingUp, Activity, DollarSign, Target, Calendar } from "lucide-react";
 import { PerformanceChart } from "@/components/PerformanceChart";
 import { useTranslation } from "react-i18next";
+import { format } from "date-fns";
+import { fr, enUS } from "date-fns/locale";
 
 const BotDetail = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const bot = mockBots.find((b) => b.id === id);
+  const locale = i18n.language === 'fr' ? fr : enUS;
 
   if (!bot) {
     return (
@@ -52,6 +55,10 @@ const BotDetail = () => {
           <div>
             <h1 className="text-4xl font-bold mb-2">{bot.name}</h1>
             <p className="text-lg text-muted-foreground">{bot.description}</p>
+            <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+              <Calendar className="w-4 h-4" />
+              <span>{t('botDetail.runningSince')} {format(new Date(bot.startDate), 'PP', { locale })}</span>
+            </div>
           </div>
           <Badge className={statusColors[bot.status]} variant="outline">
             {statusLabels[bot.status]}
