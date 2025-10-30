@@ -1,0 +1,37 @@
+{
+  "dashboard": {
+    "title": "Trading Bots Dashboard",
+    "subtitle": "Monitor and manage your algorithmic trading bots",
+    "totalPnl": "Total P&L",
+    "avgRoi": "Average ROI",
+    "activeBots": "Active Bots",
+    "totalTrades": "Total Trades",
+    "myBots": "My Bots"
+  },
+  "botCard": {
+    "roi": "ROI",
+    "pnl": "P&L",
+    "winRate": "Win Rate",
+    "trades": "Trades",
+    "viewDetails": "View details"
+  },
+  "botDetail": {
+    "back": "Back",
+    "strategy": "Strategy",
+    "code": "Code",
+    "performance": "Performance",
+    "roi": "ROI",
+    "pnl": "P&L",
+    "winRate": "Win Rate",
+    "trades": "Trades",
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "stopped": "Stopped"
+    },
+    "chart": {
+      "liquidity": "Liquidity",
+      "positionValue": "Position Value"
+    }
+  }
+}

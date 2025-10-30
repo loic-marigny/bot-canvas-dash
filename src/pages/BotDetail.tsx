@@ -5,8 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, TrendingUp, Activity, DollarSign, Target } from "lucide-react";
 import { PerformanceChart } from "@/components/PerformanceChart";
+import { useTranslation } from "react-i18next";
 
 const BotDetail = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const bot = mockBots.find((b) => b.id === id);
 
@@ -29,6 +31,12 @@ const BotDetail = () => {
     paused: "bg-chart-4/20 text-chart-4 border-chart-4/30",
     stopped: "bg-muted text-muted-foreground border-border",
   };
+  
+  const statusLabels = {
+    active: t('botDetail.status.active'),
+    paused: t('botDetail.status.paused'),
+    stopped: t('botDetail.status.stopped'),
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,7 +44,7 @@ const BotDetail = () => {
         <Link to="/">
           <Button variant="ghost" className="mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour aux bots
+            {t('botDetail.back')}
           </Button>
         </Link>
 
@@ -46,7 +54,7 @@ const BotDetail = () => {
             <p className="text-lg text-muted-foreground">{bot.description}</p>
           </div>
           <Badge className={statusColors[bot.status]} variant="outline">
-            {bot.status}
+            {statusLabels[bot.status]}
           </Badge>
         </div>
 
@@ -54,7 +62,7 @@ const BotDetail = () => {
           <Card className="p-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
               <TrendingUp className="w-4 h-4" />
-              <span>ROI</span>
+              <span>{t('botDetail.roi')}</span>
             </div>
             <p className={`text-3xl font-bold ${isPositive ? "text-success" : "text-destructive"}`}>
               {isPositive ? "+" : ""}{bot.roi.toFixed(1)}%
@@ -64,7 +72,7 @@ const BotDetail = () => {
           <Card className="p-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
               <DollarSign className="w-4 h-4" />
-              <span>P&L Total</span>
+              <span>{t('botDetail.pnl')}</span>
             </div>
             <p className={`text-3xl font-bold ${bot.totalPnL >= 0 ? "text-success" : "text-destructive"}`}>
               {bot.totalPnL >= 0 ? "+" : ""}${bot.totalPnL.toLocaleString()}
@@ -74,7 +82,7 @@ const BotDetail = () => {
           <Card className="p-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
               <Target className="w-4 h-4" />
-              <span>Win Rate</span>
+              <span>{t('botDetail.winRate')}</span>
             </div>
             <p className="text-3xl font-bold">{bot.winRate.toFixed(1)}%</p>
           </Card>
@@ -82,25 +90,25 @@ const BotDetail = () => {
           <Card className="p-6">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
               <Activity className="w-4 h-4" />
-              <span>Trades</span>
+              <span>{t('botDetail.trades')}</span>
             </div>
             <p className="text-3xl font-bold">{bot.trades.toLocaleString()}</p>
           </Card>
         </div>
 
         <Card className="p-6 mb-8">
-          <h2 className="text-2xl font-bold mb-4">Performance dans le temps</h2>
+          <h2 className="text-2xl font-bold mb-4">{t('botDetail.performance')}</h2>
           <PerformanceChart data={bot.performanceData} />
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Fonctionnement</h2>
+            <h2 className="text-2xl font-bold mb-4">{t('botDetail.strategy')}</h2>
             <p className="text-muted-foreground leading-relaxed">{bot.strategy}</p>
           </Card>
 
           <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Code de la stratégie</h2>
+            <h2 className="text-2xl font-bold mb-4">{t('botDetail.code')}</h2>
             <pre className="bg-secondary p-4 rounded-lg overflow-x-auto text-sm">
               <code className="text-foreground">{bot.code}</code>
             </pre>

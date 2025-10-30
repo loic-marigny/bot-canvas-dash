@@ -3,18 +3,26 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpRight, ArrowDownRight, TrendingUp, Activity } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface BotCardProps {
   bot: Bot;
 }
 
 export const BotCard = ({ bot }: BotCardProps) => {
+  const { t } = useTranslation();
   const isPositive = bot.roi >= 0;
   
   const statusColors = {
     active: "bg-success/20 text-success border-success/30",
     paused: "bg-chart-4/20 text-chart-4 border-chart-4/30",
     stopped: "bg-muted text-muted-foreground border-border",
+  };
+  
+  const statusLabels = {
+    active: t('botDetail.status.active'),
+    paused: t('botDetail.status.paused'),
+    stopped: t('botDetail.status.stopped'),
   };
 
   return (
@@ -28,7 +36,7 @@ export const BotCard = ({ bot }: BotCardProps) => {
             <p className="text-sm text-muted-foreground line-clamp-2">{bot.description}</p>
           </div>
           <Badge className={statusColors[bot.status]}>
-            {bot.status}
+            {statusLabels[bot.status]}
           </Badge>
         </div>
 
@@ -40,7 +48,7 @@ export const BotCard = ({ bot }: BotCardProps) => {
               ) : (
                 <ArrowDownRight className="w-4 h-4 text-destructive" />
               )}
-              <span>ROI</span>
+              <span>{t('botCard.roi')}</span>
             </div>
             <p className={`text-2xl font-bold ${isPositive ? "text-success" : "text-destructive"}`}>
               {isPositive ? "+" : ""}{bot.roi.toFixed(1)}%
@@ -50,7 +58,7 @@ export const BotCard = ({ bot }: BotCardProps) => {
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <TrendingUp className="w-4 h-4" />
-              <span>P&L</span>
+              <span>{t('botCard.pnl')}</span>
             </div>
             <p className={`text-2xl font-bold ${bot.totalPnL >= 0 ? "text-success" : "text-destructive"}`}>
               {bot.totalPnL >= 0 ? "+" : ""}${bot.totalPnL.toLocaleString()}
@@ -60,13 +68,13 @@ export const BotCard = ({ bot }: BotCardProps) => {
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Activity className="w-4 h-4" />
-              <span>Win Rate</span>
+              <span>{t('botCard.winRate')}</span>
             </div>
             <p className="text-xl font-semibold">{bot.winRate.toFixed(1)}%</p>
           </div>
 
           <div className="space-y-1">
-            <div className="text-sm text-muted-foreground">Trades</div>
+            <div className="text-sm text-muted-foreground">{t('botCard.trades')}</div>
             <p className="text-xl font-semibold">{bot.trades.toLocaleString()}</p>
           </div>
         </div>

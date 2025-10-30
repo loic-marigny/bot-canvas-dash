@@ -1,21 +1,24 @@
 import { PerformancePoint } from "@/types/bot";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { useTranslation } from "react-i18next";
 
 interface PerformanceChartProps {
   data: PerformancePoint[];
 }
 
 export const PerformanceChart = ({ data }: PerformanceChartProps) => {
+  const { t } = useTranslation();
+  
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-card border border-border p-3 rounded-lg shadow-lg">
           <p className="text-sm font-medium mb-2">{payload[0].payload.date}</p>
           <p className="text-sm text-chart-1">
-            Liquidités: ${payload[0].value.toLocaleString()}
+            {t('botDetail.chart.liquidity')}: ${payload[0].value.toLocaleString()}
           </p>
           <p className="text-sm text-chart-2">
-            Positions: ${payload[1].value.toLocaleString()}
+            {t('botDetail.chart.positionValue')}: ${payload[1].value.toLocaleString()}
           </p>
           <p className="text-sm font-semibold mt-1 text-foreground">
             Total: ${(payload[0].value + payload[1].value).toLocaleString()}
@@ -61,7 +64,7 @@ export const PerformanceChart = ({ data }: PerformanceChartProps) => {
           stackId="1"
           stroke="hsl(var(--chart-1))"
           fill="url(#colorLiquidity)"
-          name="Liquidités"
+          name={t('botDetail.chart.liquidity')}
         />
         <Area
           type="monotone"
@@ -69,7 +72,7 @@ export const PerformanceChart = ({ data }: PerformanceChartProps) => {
           stackId="1"
           stroke="hsl(var(--chart-2))"
           fill="url(#colorPosition)"
-          name="Valeur des Positions"
+          name={t('botDetail.chart.positionValue')}
         />
       </AreaChart>
     </ResponsiveContainer>
