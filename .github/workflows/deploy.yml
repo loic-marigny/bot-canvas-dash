@@ -40,7 +40,7 @@ jobs:
         env:
           # Pour GitHub Pages, on doit définir la base URL si le repo n'est pas à la racine
           # Remplacer par le nom de votre repo si nécessaire
-          VITE_BASE_URL: '/'
+          VITE_BASE_URL: '/bot-canvas-dash/'
       
       - name: Setup Pages
         uses: actions/configure-pages@v4
