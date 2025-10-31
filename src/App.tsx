@@ -12,7 +12,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <Toaster />
     <Sonner />
-    <BrowserRouter>
+    <BrowserRouter basename="/bot-canvas-dash">
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/bot/:id" element={<BotDetail />} />
