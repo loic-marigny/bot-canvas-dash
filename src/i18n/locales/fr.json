@@ -34,6 +34,21 @@
     "chart": {
       "liquidity": "Liquidités",
       "positionValue": "Valeur des Positions"
+    },
+    "openTrades": "Positions en cours",
+    "closedTrades": "Trades terminés",
+    "table": {
+      "company": "Entreprise",
+      "quantity": "Quantité",
+      "purchasePrice": "Prix d'achat",
+      "purchaseValue": "Valeur achat",
+      "currentPrice": "Prix actuel",
+      "currentValue": "Valeur actuelle",
+      "sellPrice": "Prix de vente",
+      "sellValue": "Valeur vente",
+      "pnl": "P&L",
+      "purchaseDate": "Date d'achat",
+      "sellDate": "Date de vente"
     }
   }
 }

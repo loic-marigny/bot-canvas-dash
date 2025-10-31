@@ -8,6 +8,7 @@ import { PerformanceChart } from "@/components/PerformanceChart";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const BotDetail = () => {
   const { t, i18n } = useTranslation();
@@ -121,6 +122,84 @@ const BotDetail = () => {
             </pre>
           </Card>
         </div>
+
+        <Card className="p-6 mb-8">
+          <h2 className="text-2xl font-bold mb-4">{t('botDetail.openTrades')}</h2>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('botDetail.table.company')}</TableHead>
+                  <TableHead className="text-right">{t('botDetail.table.quantity')}</TableHead>
+                  <TableHead className="text-right">{t('botDetail.table.purchasePrice')}</TableHead>
+                  <TableHead className="text-right">{t('botDetail.table.purchaseValue')}</TableHead>
+                  <TableHead className="text-right">{t('botDetail.table.currentPrice')}</TableHead>
+                  <TableHead className="text-right">{t('botDetail.table.currentValue')}</TableHead>
+                  <TableHead className="text-right">{t('botDetail.table.pnl')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bot.openTrades.map((trade) => (
+                  <TableRow key={trade.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <img src={trade.logo} alt={trade.company} className="w-8 h-8 rounded" />
+                        <span className="font-medium">{trade.company}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">{trade.quantity}</TableCell>
+                    <TableCell className="text-right">${trade.purchasePrice.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${trade.purchaseValue.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">${trade.currentPrice?.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${trade.currentValue?.toLocaleString()}</TableCell>
+                    <TableCell className={`text-right font-semibold ${trade.pnl >= 0 ? "text-success" : "text-destructive"}`}>
+                      {trade.pnl >= 0 ? "+" : ""}${trade.pnl.toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <h2 className="text-2xl font-bold mb-4">{t('botDetail.closedTrades')}</h2>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t('botDetail.table.company')}</TableHead>
+                  <TableHead className="text-right">{t('botDetail.table.quantity')}</TableHead>
+                  <TableHead className="text-right">{t('botDetail.table.purchasePrice')}</TableHead>
+                  <TableHead className="text-right">{t('botDetail.table.purchaseValue')}</TableHead>
+                  <TableHead className="text-right">{t('botDetail.table.sellPrice')}</TableHead>
+                  <TableHead className="text-right">{t('botDetail.table.sellValue')}</TableHead>
+                  <TableHead className="text-right">{t('botDetail.table.pnl')}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bot.closedTrades.map((trade) => (
+                  <TableRow key={trade.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <img src={trade.logo} alt={trade.company} className="w-8 h-8 rounded" />
+                        <span className="font-medium">{trade.company}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">{trade.quantity}</TableCell>
+                    <TableCell className="text-right">${trade.purchasePrice.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${trade.purchaseValue.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">${trade.sellPrice?.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">${trade.sellValue?.toLocaleString()}</TableCell>
+                    <TableCell className={`text-right font-semibold ${trade.pnl >= 0 ? "text-success" : "text-destructive"}`}>
+                      {trade.pnl >= 0 ? "+" : ""}${trade.pnl.toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
       </div>
     </div>
   );
