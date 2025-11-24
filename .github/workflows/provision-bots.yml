@@ -37,7 +37,7 @@ jobs:
       - name: Provision bots
         env:
           FIREBASE_ADMIN_CREDENTIALS: ${{ github.workspace }}/admin-key.json
-        run: node --loader ts-node/esm scripts/admin/provision-bots.ts ${{ github.event.inputs.config_path }}
+        run: npx tsx scripts/admin/provision-bots.ts ${{ github.event.inputs.config_path }}
 
       - name: Upload provisioning report
         if: success()
