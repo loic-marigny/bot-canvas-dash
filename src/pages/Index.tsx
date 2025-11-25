@@ -2,14 +2,23 @@ import { mockBots } from "@/data/mockBots";
 import { BotCard } from "@/components/BotCard";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Activity } from "lucide-react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useMomentumBotStats } from "@/hooks/useMomentumBotStats";
 
 const Index = () => {
   const { t } = useTranslation();
-  const totalPnL = mockBots.reduce((acc, bot) => acc + bot.totalPnL, 0);
-  const avgRoi = mockBots.reduce((acc, bot) => acc + bot.roi, 0) / mockBots.length;
-  const activeBots = mockBots.filter((bot) => bot.status === "active").length;
-  const totalTrades = mockBots.reduce((acc, bot) => acc + bot.trades, 0);
+  const { data: momentumOverride } = useMomentumBotStats();
+
+  const bots = useMemo(() => {
+    if (!momentumOverride) return mockBots;
+    return mockBots.map((bot) => (bot.id === momentumOverride.id ? { ...bot, ...momentumOverride } : bot));
+  }, [momentumOverride]);
+
+  const totalPnL = bots.reduce((acc, bot) => acc + bot.totalPnL, 0);
+  const avgRoi = bots.reduce((acc, bot) => acc + bot.roi, 0) / bots.length;
+  const activeBots = bots.filter((bot) => bot.status === "active").length;
+  const totalTrades = bots.reduce((acc, bot) => acc + bot.trades, 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -56,7 +65,7 @@ const Index = () => {
         <div>
           <h2 className="text-3xl font-bold mb-6">{t('dashboard.myBots')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-            {mockBots.map((bot) => (
+            {bots.map((bot) => (
               <BotCard key={bot.id} bot={bot} />
             ))}
           </div>

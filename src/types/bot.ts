@@ -29,6 +29,12 @@ export interface Bot {
   performanceData: PerformancePoint[];
   openTrades: Trade[];
   closedTrades: Trade[];
+  liveMetrics?: {
+    cash: number;
+    initialCredits: number;
+    marketValue: number;
+    lastTradeAt?: string;
+  };
 }
 
 export interface PerformancePoint {

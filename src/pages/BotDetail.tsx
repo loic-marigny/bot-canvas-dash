@@ -9,11 +9,14 @@ import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useMomentumBotStats } from "@/hooks/useMomentumBotStats";
 
 const BotDetail = () => {
   const { t, i18n } = useTranslation();
   const { id } = useParams();
-  const bot = mockBots.find((b) => b.id === id);
+  const { data: momentumOverride } = useMomentumBotStats();
+  const baseBot = mockBots.find((b) => b.id === id);
+  const bot = baseBot && momentumOverride && baseBot.id === momentumOverride.id ? { ...baseBot, ...momentumOverride } : baseBot;
   const locale = i18n.language === 'fr' ? fr : enUS;
 
   if (!bot) {
@@ -67,42 +70,64 @@ const BotDetail = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card className="p-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <TrendingUp className="w-4 h-4" />
-              <span>{t('botDetail.roi')}</span>
-            </div>
-            <p className={`text-3xl font-bold ${isPositive ? "text-success" : "text-destructive"}`}>
+        <Card className="p-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <TrendingUp className="w-4 h-4" />
+            <span>{t('botDetail.roi')}</span>
+          </div>
+          <p className={`text-3xl font-bold ${isPositive ? "text-success" : "text-destructive"}`}>
               {isPositive ? "+" : ""}{bot.roi.toFixed(1)}%
             </p>
           </Card>
 
-          <Card className="p-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <DollarSign className="w-4 h-4" />
-              <span>{t('botDetail.pnl')}</span>
-            </div>
-            <p className={`text-3xl font-bold ${bot.totalPnL >= 0 ? "text-success" : "text-destructive"}`}>
+        <Card className="p-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <DollarSign className="w-4 h-4" />
+            <span>{t('botDetail.pnl')}</span>
+          </div>
+          <p className={`text-3xl font-bold ${bot.totalPnL >= 0 ? "text-success" : "text-destructive"}`}>
               {bot.totalPnL >= 0 ? "+" : ""}${bot.totalPnL.toLocaleString()}
             </p>
           </Card>
 
-          <Card className="p-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <Target className="w-4 h-4" />
-              <span>{t('botDetail.winRate')}</span>
-            </div>
-            <p className="text-3xl font-bold">{bot.winRate.toFixed(1)}%</p>
-          </Card>
+        <Card className="p-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <Target className="w-4 h-4" />
+            <span>{t('botDetail.winRate')}</span>
+          </div>
+          <p className="text-3xl font-bold">{bot.winRate.toFixed(1)}%</p>
+        </Card>
 
-          <Card className="p-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <Activity className="w-4 h-4" />
-              <span>{t('botDetail.trades')}</span>
+        <Card className="p-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <Activity className="w-4 h-4" />
+            <span>{t('botDetail.trades')}</span>
+          </div>
+          <p className="text-3xl font-bold">{bot.trades.toLocaleString()}</p>
+        </Card>
+      </div>
+
+      {bot.liveMetrics && (
+        <Card className="p-6 mb-8">
+          <h2 className="text-2xl font-bold mb-4">{t('botDetail.liveMetrics.title', { defaultValue: "Live metrics" })}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <div className="text-sm text-muted-foreground">{t('botDetail.liveMetrics.cash', { defaultValue: "Cash" })}</div>
+              <p className="text-2xl font-semibold">${bot.liveMetrics.cash.toLocaleString()}</p>
             </div>
-            <p className="text-3xl font-bold">{bot.trades.toLocaleString()}</p>
-          </Card>
-        </div>
+            <div>
+              <div className="text-sm text-muted-foreground">{t('botDetail.liveMetrics.marketValue', { defaultValue: "Positions value" })}</div>
+              <p className="text-2xl font-semibold">${bot.liveMetrics.marketValue.toLocaleString()}</p>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">{t('botDetail.liveMetrics.lastTrade', { defaultValue: "Last trade" })}</div>
+              <p className="text-2xl font-semibold">
+                {bot.liveMetrics.lastTradeAt ? format(new Date(bot.liveMetrics.lastTradeAt), 'PP p', { locale }) : t('botDetail.liveMetrics.never', { defaultValue: "Never" })}
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
         <Card className="p-6 mb-8">
           <h2 className="text-2xl font-bold mb-4">{t('botDetail.performance')}</h2>
