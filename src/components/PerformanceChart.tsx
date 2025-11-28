@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { PerformancePoint } from "@/types/bot";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useTranslation } from "react-i18next";
@@ -8,12 +9,45 @@ interface PerformanceChartProps {
 
 export const PerformanceChart = ({ data }: PerformanceChartProps) => {
   const { t } = useTranslation();
-  
+  const dateFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric",
+      }),
+    [],
+  );
+  const tooltipFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    [],
+  );
+
+  const formatLabel = (value: string) => {
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return value;
+    return dateFormatter.format(date);
+  };
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
+      const rawDate = payload[0].payload.date;
+      const formattedDate = formatLabel(rawDate);
+      const tooltipDate = (() => {
+        const date = new Date(rawDate);
+        if (!Number.isFinite(date.getTime())) return rawDate;
+        return tooltipFormatter.format(date);
+      })();
+
       return (
         <div className="bg-card border border-border p-3 rounded-lg shadow-lg">
-          <p className="text-sm font-medium mb-2">{payload[0].payload.date}</p>
+          <p className="text-sm font-medium mb-2">{tooltipDate}</p>
           <p className="text-sm text-chart-1">
             {t('botDetail.chart.liquidity')}: ${payload[0].value.toLocaleString()}
           </p>
@@ -47,6 +81,7 @@ export const PerformanceChart = ({ data }: PerformanceChartProps) => {
           dataKey="date" 
           stroke="hsl(var(--muted-foreground))"
           style={{ fontSize: '12px' }}
+          tickFormatter={formatLabel}
         />
         <YAxis 
           stroke="hsl(var(--muted-foreground))"

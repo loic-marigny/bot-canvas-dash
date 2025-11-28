@@ -1,5 +1,9 @@
 import { Bot } from "@/types/bot";
 
+const BOT_UIDS: Record<string, string | undefined> = {
+  "1": import.meta.env.VITE_BOT_MOMENTUM_UID,
+};
+
 export const mockBots: Bot[] = [
   {
     id: "1",
@@ -26,6 +30,7 @@ export const mockBots: Bot[] = [
     winRate: 67.3,
     trades: 1247,
     status: "active",
+    firestoreUid: BOT_UIDS["1"],
     performanceData: [
       { date: "2024-01", liquidity: 50000, positionValue: 0 },
       { date: "2024-02", liquidity: 48000, positionValue: 3200 },

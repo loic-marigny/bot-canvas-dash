@@ -7,6 +7,8 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
+  setDoc,
   getFirestore,
   runTransaction,
   serverTimestamp,
@@ -178,6 +180,71 @@ async function submitSpotOrder(db: ReturnType<typeof getFirestore>, params: Spot
   });
 }
 
+async function fetchLatestPriceForSymbol(supabase: ReturnType<typeof createClient>, symbol: string): Promise<number | null> {
+  const { data, error } = await supabase
+    .from("stock_market_history")
+    .select("close_value")
+    .eq("symbol", symbol)
+    .order("record_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.warn(`[Momentum Bot] Failed to fetch price for ${symbol}`, error);
+    return null;
+  }
+  const raw = Number(data?.close_value ?? 0);
+  return Number.isFinite(raw) ? raw : null;
+}
+
+async function recordWealthSnapshot(
+  uid: string,
+  db: ReturnType<typeof getFirestore>,
+  supabase: ReturnType<typeof createClient>,
+  source = "momentum-bot",
+) {
+  try {
+    const userRef = doc(db, "users", uid);
+    const positionsRef = collection(db, "users", uid, "positions");
+    const [userSnap, positionsSnap] = await Promise.all([getDoc(userRef), getDocs(positionsRef)]);
+
+    const userData = userSnap.exists() ? (userSnap.data() as Record<string, unknown>) : {};
+    const baseCash =
+      sanitizeNumber(userData?.cash) ??
+      sanitizeNumber(userData?.initialCredits) ??
+      DEFAULT_INITIAL_CASH;
+    const cash = round6(baseCash);
+
+    const positionValues = await Promise.all(
+      positionsSnap.docs.map(async (docSnap) => {
+        const data = docSnap.data() as Record<string, unknown>;
+        const qty = sanitizeNumber(data?.qty);
+        if (typeof qty !== "number" || Math.abs(qty) <= FIFO_EPSILON) return 0;
+        const symbol = typeof data?.symbol === "string" && data.symbol.trim() ? data.symbol : docSnap.id;
+        const price = symbol ? await fetchLatestPriceForSymbol(supabase, symbol) : null;
+        if (price == null) return 0;
+        return round6(qty * price);
+      }),
+    );
+
+    const stocks = round6(positionValues.reduce((acc, value) => acc + value, 0));
+    const total = round6(cash + stocks);
+
+    const snapshotRef = doc(collection(db, "users", uid, "wealthHistory"));
+    await setDoc(snapshotRef, {
+      cash,
+      stocks,
+      total,
+      source,
+      snapshotType: "order",
+      ts: serverTimestamp(),
+    });
+    console.debug("[Momentum Bot] Recorded wealth snapshot", { cash, stocks, total });
+  } catch (err) {
+    console.error("[Momentum Bot] Failed to record wealth snapshot", err);
+  }
+}
+
 function requiredEnv(key: string): string {
   const value = process.env[key];
   if (!value) throw new Error(`Missing environment variable ${key}`);
@@ -211,6 +278,9 @@ async function main() {
   const uid = cred.user.uid;
   console.log(`[Momentum Bot] Authenticated as UID ${uid}`);
 
+  const db = getFirestore(app);
+  const userRef = doc(db, "users", uid);
+  const snapshotDoc = doc(collection(db, "users", uid, "wealthHistory"));
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
   const { data, error } = await supabase
     .from("stock_market_history")
@@ -231,9 +301,6 @@ async function main() {
     console.log("[Momentum Bot] Invalid price data, skipping.");
     return;
   }
-
-  const db = getFirestore(app);
-  const userRef = doc(db, "users", uid);
   const positionRef = doc(db, "users", uid, "positions", symbol);
   const [userSnap, positionSnap] = await Promise.all([getDoc(userRef), getDoc(positionRef)]);
   const cash = sanitizeNumber(userSnap.exists() ? (userSnap.data() as any).cash : undefined) ?? DEFAULT_INITIAL_CASH;
@@ -262,6 +329,8 @@ async function main() {
   } else {
     console.log("[Momentum Bot] No action triggered.");
   }
+
+  await recordWealthSnapshot(uid, db, supabase);
 }
 
 main()

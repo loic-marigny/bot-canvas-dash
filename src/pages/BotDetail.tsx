@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useWealthHistory } from "@/hooks/useWealthHistory";
 import { useMomentumBotStats } from "@/hooks/useMomentumBotStats";
 
 const BotDetail = () => {
@@ -44,6 +45,14 @@ const BotDetail = () => {
     paused: t('botDetail.status.paused'),
     stopped: t('botDetail.status.stopped'),
   };
+
+  const fallbackUid =
+    bot.firestoreUid ??
+    (bot.id === "1" ? import.meta.env.VITE_BOT_MOMENTUM_UID : undefined);
+  const { history: wealthHistory } = useWealthHistory(fallbackUid);
+
+  const performanceData =
+    wealthHistory && wealthHistory.length ? wealthHistory : bot.performanceData;
 
   return (
     <div className="min-h-screen bg-background">
@@ -131,7 +140,7 @@ const BotDetail = () => {
 
         <Card className="p-6 mb-8">
           <h2 className="text-2xl font-bold mb-4">{t('botDetail.performance')}</h2>
-          <PerformanceChart data={bot.performanceData} />
+          <PerformanceChart data={performanceData} />
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">

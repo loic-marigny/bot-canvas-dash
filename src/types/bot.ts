@@ -29,6 +29,7 @@ export interface Bot {
   performanceData: PerformancePoint[];
   openTrades: Trade[];
   closedTrades: Trade[];
+  firestoreUid?: string;
   liveMetrics?: {
     cash: number;
     initialCredits: number;

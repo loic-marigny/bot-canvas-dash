@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { collection, doc, getDoc, getDocs, Timestamp } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, Timestamp, type QueryDocumentSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { supabaseClient } from "@/lib/supabaseClient";
 import type { Bot, Trade } from "@/types/bot";
@@ -12,8 +12,15 @@ interface LiveMetrics {
 }
 
 const DEFAULT_INITIAL_CREDITS = 1_000_000;
+const STATS_EPSILON = 1e-6;
 const MOMENTUM_BOT_ID = "1";
 const MOMENTUM_UID = import.meta.env.VITE_BOT_MOMENTUM_UID;
+const sanitizeNumber = (value: unknown): number | undefined => {
+  if (typeof value !== "number") return undefined;
+  if (!Number.isFinite(value)) return undefined;
+  return value;
+};
+const round6 = (value: number): number => Math.round(value * 1e6) / 1e6;
 
 async function fetchLatestPrice(symbol: string): Promise<number | null> {
   if (!supabaseClient) return null;
@@ -76,13 +83,11 @@ export function useMomentumBotStats() {
             ? userData.cash
             : initialCredits;
 
-        const tradeDates = ordersSnap.docs
-          .map((order) => {
-            const data = order.data() as any;
-            return data?.ts instanceof Timestamp ? data.ts.toDate().getTime() : undefined;
-          })
-          .filter((value): value is number => typeof value === "number");
-        const lastTradeAt = tradeDates.length ? new Date(Math.max(...tradeDates)).toISOString() : undefined;
+        const normalizedOrders = normalizeOrders(ordersSnap.docs);
+        const lastTradeAt =
+          normalizedOrders.length > 0
+            ? new Date(Math.max(...normalizedOrders.map((order) => order.ts))).toISOString()
+            : undefined;
 
         const openTrades: Trade[] = [];
         let marketValue = 0;
@@ -112,9 +117,11 @@ export function useMomentumBotStats() {
         }
 
         const totalValue = cash + marketValue;
-        const totalPnL = totalValue - initialCredits;
-        const roi = initialCredits ? (totalPnL / initialCredits) * 100 : 0;
-        const trades = ordersSnap.size;
+        const stats = computeBotStats(initialCredits, totalValue, normalizedOrders);
+        const totalPnL = stats.pnl;
+        const roi = stats.roi * 100;
+        const trades = stats.tradesCount;
+        const winRate = stats.winRate * 100;
         const status: Bot["status"] =
           lastTradeAt && Date.now() - new Date(lastTradeAt).getTime() < 1000 * 60 * 60 * 24 * 3
             ? "active"
@@ -127,6 +134,7 @@ export function useMomentumBotStats() {
           roi,
           totalPnL,
           trades,
+          winRate,
           status,
           ...(openTrades.length ? { openTrades } : {}),
           liveMetrics: { cash, initialCredits, marketValue, lastTradeAt },
@@ -154,4 +162,99 @@ export function useMomentumBotStats() {
   }, []);
 
   return { data: override, loading, error };
+}
+
+type NormalizedOrder = {
+  symbol: string;
+  side: "buy" | "sell";
+  qty: number;
+  fillPrice: number;
+  ts: number;
+};
+
+function normalizeOrders(docs: QueryDocumentSnapshot[]): NormalizedOrder[] {
+  return docs
+    .map((order) => {
+      const data = order.data() as Record<string, unknown>;
+      const symbolRaw = typeof data?.symbol === "string" ? data.symbol : order.id;
+      const sideRaw = typeof data?.side === "string" ? data.side.toLowerCase() : "";
+      const qty = sanitizeNumber(data?.qty);
+      const fillPrice = sanitizeNumber((data as any)?.fillPrice);
+      const tsValue = data?.ts;
+      let ts = Date.now();
+      if (typeof tsValue === "number" && Number.isFinite(tsValue)) {
+        ts = tsValue;
+      } else if (tsValue instanceof Timestamp) {
+        ts = tsValue.toMillis();
+      } else if (tsValue instanceof Date) {
+        ts = tsValue.getTime();
+      }
+      if (!symbolRaw || (sideRaw !== "buy" && sideRaw !== "sell")) return null;
+      if (typeof qty !== "number" || typeof fillPrice !== "number") return null;
+      if (qty <= STATS_EPSILON || fillPrice <= STATS_EPSILON) return null;
+      return { symbol: symbolRaw, side: sideRaw as "buy" | "sell", qty, fillPrice, ts };
+    })
+    .filter((entry): entry is NormalizedOrder => Boolean(entry))
+    .sort((a, b) => a.ts - b.ts);
+}
+
+function computeBotStats(
+  initialCredits: number,
+  totalValue: number,
+  orders: NormalizedOrder[],
+) {
+  const tradesCount = orders.length;
+  const pnl = round6(totalValue - initialCredits);
+  const roi = initialCredits > STATS_EPSILON ? (totalValue - initialCredits) / initialCredits : 0;
+
+  const fifoBooks = new Map<string, Array<{ qty: number; price: number }>>();
+  let realizedPnl = 0;
+  let wins = 0;
+  let losses = 0;
+  let closedTrades = 0;
+
+  for (const order of orders) {
+    if (!fifoBooks.has(order.symbol)) {
+      fifoBooks.set(order.symbol, []);
+    }
+    const book = fifoBooks.get(order.symbol)!;
+    if (order.side === "buy") {
+      book.push({ qty: order.qty, price: order.fillPrice });
+      continue;
+    }
+    let remaining = order.qty;
+    let orderPnl = 0;
+    while (remaining > STATS_EPSILON && book.length) {
+      const lot = book[0];
+      const consume = Math.min(lot.qty, remaining);
+      orderPnl += (order.fillPrice - lot.price) * consume;
+      lot.qty -= consume;
+      remaining -= consume;
+      if (lot.qty <= STATS_EPSILON) {
+        book.shift();
+      }
+    }
+    if (remaining <= STATS_EPSILON) {
+      realizedPnl += orderPnl;
+      closedTrades += 1;
+      if (orderPnl > STATS_EPSILON) {
+        wins += 1;
+      } else if (orderPnl < -STATS_EPSILON) {
+        losses += 1;
+      }
+    }
+  }
+
+  const winRate = closedTrades > 0 ? wins / closedTrades : 0;
+
+  return {
+    tradesCount,
+    pnl,
+    roi,
+    realizedPnl: round6(realizedPnl),
+    wins,
+    losses,
+    winRate,
+    closedTrades,
+  };
 }
