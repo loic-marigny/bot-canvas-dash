@@ -1,6 +1,6 @@
 ﻿# Momentum Scalper Strategy
 
-- Utilise RSI 14 et analyse de volume glissante 20 jours.
-- Entre long si RSI < 30 et volume > 1.5x moyenne.
-- Prend profit ou hedge si RSI > 70.
-- Ne fait rien sinon.
+- Observe uniquement l'évolution entre le dernier prix et le précédent.
+- Si le prix grimpe d'environ 0,1 % et que la trésorerie suffit pour un lot, le bot achète.
+- Si le prix recule d'environ 0,1 % et que le portefeuille détient au moins un lot, le bot vend.
+- Dans les autres cas, aucune action n'est envoyée et la position est conservée.
