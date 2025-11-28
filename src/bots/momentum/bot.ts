@@ -17,6 +17,8 @@ import {
 } from "firebase/firestore";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 type SpotSide = "buy" | "sell";
 
@@ -34,6 +36,22 @@ interface SpotOrderParams {
 const FIFO_EPSILON = 1e-9;
 const DEFAULT_INITIAL_CASH = 1_000_000;
 type AppSupabaseClient = SupabaseClient<any, "public", "public", any, any>;
+type LogicDecision = {
+  action: "buy" | "sell" | "hold";
+  reason?: string;
+};
+
+type LogicInput = {
+  latestPrice: number;
+  previousPrice: number;
+  cash: number;
+  qtyHeld: number;
+  lotSize: number;
+};
+
+const PYTHON_BIN =
+  process.env.BOT_LOGIC_PYTHON ?? (process.platform === "win32" ? "python" : "python3");
+const LOGIC_SCRIPT = fileURLToPath(new URL("./logic_runner.py", import.meta.url));
 
 type FifoLotDoc = {
   qty: number;
@@ -181,6 +199,41 @@ async function submitSpotOrder(db: ReturnType<typeof getFirestore>, params: Spot
   });
 }
 
+async function runPythonLogic(input: LogicInput): Promise<LogicDecision> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(PYTHON_BIN, [LOGIC_SCRIPT]);
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.on("error", (error) => reject(error));
+    child.on("close", (code) => {
+      if (code !== 0) {
+        return reject(new Error(`Python logic exited with code ${code}: ${stderr}`));
+      }
+      try {
+        const parsed = JSON.parse(stdout.trim());
+        resolve(parsed);
+      } catch (err) {
+        reject(new Error(`Failed to parse python output: ${stdout}\n${err}`));
+      }
+    });
+    if (!child.stdin) {
+      reject(new Error("Python process stdin not available"));
+      return;
+    }
+    child.stdin.setDefaultEncoding("utf8");
+    child.stdin.write(JSON.stringify(input));
+    child.stdin.end();
+  });
+}
+
 async function fetchLatestPriceForSymbol(supabase: AppSupabaseClient, symbol: string): Promise<number | null> {
   const { data, error } = await supabase
     .from("stock_market_history")
@@ -282,7 +335,6 @@ async function main() {
 
   const db = getFirestore(app);
   const userRef = doc(db, "users", uid);
-  const snapshotDoc = doc(collection(db, "users", uid, "wealthHistory"));
   const supabase: AppSupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
   const { data, error } = await supabase
     .from("stock_market_history")
@@ -310,26 +362,21 @@ async function main() {
 
   console.log(`[Momentum Bot] Latest=${latest}, Previous=${previous}, Cash=${cash}, Qty=${qtyHeld}`);
 
-  if (latest > previous * 1.001 && cash >= latest * lotSize) {
-    console.log("[Momentum Bot] Detected upward momentum -> buying.");
-    await submitSpotOrder(db, {
-      uid,
-      symbol,
-      side: "buy",
-      qty: lotSize,
-      fillPrice: latest,
-    });
-  } else if (latest < previous * 0.999 && qtyHeld >= lotSize) {
-    console.log("[Momentum Bot] Detected downward momentum -> selling.");
-    await submitSpotOrder(db, {
-      uid,
-      symbol,
-      side: "sell",
-      qty: lotSize,
-      fillPrice: latest,
-    });
+  const logicDecision = await runPythonLogic({
+    latestPrice: latest,
+    previousPrice: previous,
+    cash,
+    qtyHeld,
+    lotSize,
+  });
+  console.log(`[Momentum Bot] Logic decision: ${logicDecision.action} (${logicDecision.reason ?? "no reason provided"})`);
+
+  if (logicDecision.action === "buy" && cash >= latest * lotSize) {
+    await submitSpotOrder(db, { uid, symbol, side: "buy", qty: lotSize, fillPrice: latest });
+  } else if (logicDecision.action === "sell" && qtyHeld >= lotSize) {
+    await submitSpotOrder(db, { uid, symbol, side: "sell", qty: lotSize, fillPrice: latest });
   } else {
-    console.log("[Momentum Bot] No action triggered.");
+    console.log("[Momentum Bot] No order submitted.");
   }
 
   await recordWealthSnapshot(uid, db, supabase);

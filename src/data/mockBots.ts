@@ -1,6 +1,6 @@
 import type { Bot, BotActivationEvent } from "@/types/bot";
 
-import momentumCode from "@/bots/momentum/bot.ts?raw";
+import momentumCode from "@/bots/momentum/bot.py?raw";
 import momentumStrategy from "@/bots/momentum/strategy.md?raw";
 import momentumHistory from "@/bots/momentum/history.json";
 
