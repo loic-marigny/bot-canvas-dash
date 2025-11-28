@@ -19,7 +19,8 @@ const isActivationAction = (value: string): value is ActivationAction =>
 async function loadHistory(botSlug: string): Promise<ActivationEvent[]> {
   const historyPath = resolve(BOT_HISTORY_DIR, botSlug, "history.json");
   try {
-    const content = await readFile(historyPath, "utf-8");
+    const rawContent = await readFile(historyPath, "utf-8");
+    const content = rawContent.replace(/^\uFEFF/, "");
     const parsed = JSON.parse(content);
     if (Array.isArray(parsed)) {
       return parsed.filter((entry): entry is ActivationEvent => typeof entry?.timestamp === "string" && isActivationAction(entry?.action));
