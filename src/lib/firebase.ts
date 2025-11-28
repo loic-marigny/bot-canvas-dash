@@ -20,6 +20,5 @@ const isBrowser = typeof window !== "undefined";
 export const db = isBrowser
   ? initializeFirestore(app, {
       experimentalForceLongPolling: true,
-      useFetchStreams: false,
     })
   : getFirestore(app);
