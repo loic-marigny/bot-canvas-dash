@@ -1,5 +1,5 @@
 import { getApps, initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore } from "firebase/firestore";
 
 const config = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -15,5 +15,11 @@ if (!config.apiKey) {
 }
 
 const app = getApps().length ? getApps()[0] : initializeApp(config);
+const isBrowser = typeof window !== "undefined";
 
-export const db = getFirestore(app);
+export const db = isBrowser
+  ? initializeFirestore(app, {
+      experimentalForceLongPolling: true,
+      useFetchStreams: false,
+    })
+  : getFirestore(app);

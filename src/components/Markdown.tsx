@@ -15,7 +15,11 @@ export const Markdown = ({ className, ...props }: MarkdownProps) => (
       p: ({ node, ...rest }) => <p className="mb-3 leading-relaxed text-muted-foreground" {...rest} />,
       ul: ({ node, ...rest }) => <ul className="list-disc pl-5 space-y-1 text-muted-foreground mb-3" {...rest} />,
       ol: ({ node, ...rest }) => <ol className="list-decimal pl-5 space-y-1 text-muted-foreground mb-3" {...rest} />,
-      li: ({ node, ...rest }) => <li {...rest} />,
+      li: ({ node, ordered, ...rest }) => {
+        const props = { ...rest };
+        delete (props as Record<string, unknown>).ordered;
+        return <li {...props} />;
+      },
       code: ({ inline, className: codeClass, children, ...rest }) =>
         inline ? (
           <code className={`px-1 py-0.5 rounded bg-muted text-sm ${codeClass ?? ""}`} {...rest}>
