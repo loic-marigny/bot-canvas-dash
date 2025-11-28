@@ -16,7 +16,7 @@ import {
   type DocumentSnapshot,
 } from "firebase/firestore";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 type SpotSide = "buy" | "sell";
 
@@ -33,6 +33,7 @@ interface SpotOrderParams {
 
 const FIFO_EPSILON = 1e-9;
 const DEFAULT_INITIAL_CASH = 1_000_000;
+type AppSupabaseClient = SupabaseClient<any, "public", "public", any, any>;
 
 type FifoLotDoc = {
   qty: number;
@@ -180,7 +181,7 @@ async function submitSpotOrder(db: ReturnType<typeof getFirestore>, params: Spot
   });
 }
 
-async function fetchLatestPriceForSymbol(supabase: ReturnType<typeof createClient>, symbol: string): Promise<number | null> {
+async function fetchLatestPriceForSymbol(supabase: AppSupabaseClient, symbol: string): Promise<number | null> {
   const { data, error } = await supabase
     .from("stock_market_history")
     .select("close_value")
@@ -193,14 +194,15 @@ async function fetchLatestPriceForSymbol(supabase: ReturnType<typeof createClien
     console.warn(`[Momentum Bot] Failed to fetch price for ${symbol}`, error);
     return null;
   }
-  const raw = Number(data?.close_value ?? 0);
+  if (!data) return null;
+  const raw = Number(data.close_value ?? 0);
   return Number.isFinite(raw) ? raw : null;
 }
 
 async function recordWealthSnapshot(
   uid: string,
   db: ReturnType<typeof getFirestore>,
-  supabase: ReturnType<typeof createClient>,
+  supabase: AppSupabaseClient,
   source = "momentum-bot",
 ) {
   try {
@@ -281,7 +283,7 @@ async function main() {
   const db = getFirestore(app);
   const userRef = doc(db, "users", uid);
   const snapshotDoc = doc(collection(db, "users", uid, "wealthHistory"));
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  const supabase: AppSupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
   const { data, error } = await supabase
     .from("stock_market_history")
     .select("record_date, close_value")

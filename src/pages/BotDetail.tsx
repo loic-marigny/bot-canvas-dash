@@ -3,7 +3,7 @@ import { mockBots } from "@/data/mockBots";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, TrendingUp, Activity, DollarSign, Target, Calendar } from "lucide-react";
+import { ArrowLeft, TrendingUp, Activity, DollarSign, Target, Calendar, Clock } from "lucide-react";
 import { PerformanceChart } from "@/components/PerformanceChart";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
@@ -11,6 +11,7 @@ import { fr, enUS } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useWealthHistory } from "@/hooks/useWealthHistory";
 import { useMomentumBotStats } from "@/hooks/useMomentumBotStats";
+import { deriveBotLifecycleState } from "@/lib/botLifecycle";
 
 const BotDetail = () => {
   const { t, i18n } = useTranslation();
@@ -34,6 +35,9 @@ const BotDetail = () => {
   }
 
   const isPositive = bot.roi >= 0;
+  const lifecycle = deriveBotLifecycleState(bot);
+  const runningSince = lifecycle.lastActivatedAt ?? bot.startDate;
+  const lastEventDate = lifecycle.lastEvent?.timestamp ? format(new Date(lifecycle.lastEvent.timestamp), 'PP p', { locale }) : null;
   const statusColors = {
     active: "bg-success/20 text-success border-success/30",
     paused: "bg-chart-4/20 text-chart-4 border-chart-4/30",
@@ -68,13 +72,21 @@ const BotDetail = () => {
           <div>
             <h1 className="text-4xl font-bold mb-2">{bot.name}</h1>
             <p className="text-lg text-muted-foreground">{bot.description}</p>
-            <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
-              <Calendar className="w-4 h-4" />
-              <span>{t('botDetail.runningSince')} {format(new Date(bot.startDate), 'PP', { locale })}</span>
+            <div className="flex flex-col gap-2 mt-3 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span>{t('botDetail.runningSince')} {format(new Date(runningSince), 'PP', { locale })}</span>
+              </div>
+              {lastEventDate && lifecycle.lastEvent?.action === "deactivated" && (
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  <span>{t('botDetail.lastPause', { defaultValue: "Last pause" })}: {lastEventDate}</span>
+                </div>
+              )}
             </div>
           </div>
-          <Badge className={statusColors[bot.status]} variant="outline">
-            {statusLabels[bot.status]}
+          <Badge className={statusColors[lifecycle.status]} variant="outline">
+            {statusLabels[lifecycle.status]}
           </Badge>
         </div>
 

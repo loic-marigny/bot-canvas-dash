@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "bot:momentum": "tsx scripts/bots/momentum.ts"
+    "bot:momentum": "tsx src/bots/momentum/bot.ts",
+    "bot:record-activation": "tsx scripts/update-bot-activation-history.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -1,8 +1,29 @@
-import { Bot } from "@/types/bot";
+import type { Bot, BotActivationEvent } from "@/types/bot";
+
+import momentumCode from "@/bots/momentum/bot.ts?raw";
+import momentumStrategy from "@/bots/momentum/strategy.md?raw";
+import momentumHistory from "@/bots/momentum/history.json";
+
+import meanReversionCode from "@/bots/mean-reversion/bot.py?raw";
+import meanReversionStrategy from "@/bots/mean-reversion/strategy.md?raw";
+import meanReversionHistory from "@/bots/mean-reversion/history.json";
+
+import trendFollowerCode from "@/bots/trend-follower/bot.py?raw";
+import trendFollowerStrategy from "@/bots/trend-follower/strategy.md?raw";
+import trendFollowerHistory from "@/bots/trend-follower/history.json";
+
+import volatilityHunterCode from "@/bots/volatility-hunter/bot.py?raw";
+import volatilityHunterStrategy from "@/bots/volatility-hunter/strategy.md?raw";
+import volatilityHunterHistory from "@/bots/volatility-hunter/history.json";
 
 const BOT_UIDS: Record<string, string | undefined> = {
   "1": import.meta.env.VITE_BOT_MOMENTUM_UID,
 };
+
+const momentumActivationHistory = momentumHistory as BotActivationEvent[];
+const meanReversionActivationHistory = meanReversionHistory as BotActivationEvent[];
+const trendFollowerActivationHistory = trendFollowerHistory as BotActivationEvent[];
+const volatilityHunterActivationHistory = volatilityHunterHistory as BotActivationEvent[];
 
 export const mockBots: Bot[] = [
   {
@@ -10,21 +31,9 @@ export const mockBots: Bot[] = [
     name: "Momentum Scalper",
     description: "Bot de scalping rapide basé sur le momentum et les indicateurs de volume",
     startDate: "2024-01-15",
-    code: `def momentum_strategy(data):
-    # RSI calculation
-    rsi = calculate_rsi(data, period=14)
-    
-    # Volume analysis
-    volume_ma = data['volume'].rolling(20).mean()
-    
-    # Entry conditions
-    if rsi < 30 and data['volume'] > volume_ma * 1.5:
-        return 'BUY'
-    elif rsi > 70:
-        return 'SELL'
-    
-    return 'HOLD'`,
-    strategy: "Stratégie de scalping basée sur l'indice RSI et l'analyse du volume. Entre en position lorsque le RSI est en zone de survente (< 30) avec un volume anormalement élevé. Sort de position quand le RSI atteint la zone de surachat (> 70).",
+    code: momentumCode,
+    strategy: momentumStrategy,
+    activationHistory: momentumActivationHistory,
     roi: 23.5,
     totalPnL: 14520,
     winRate: 67.3,
@@ -126,21 +135,9 @@ export const mockBots: Bot[] = [
     name: "Mean Reversion Pro",
     description: "Exploite les retours à la moyenne sur les paires majeures",
     startDate: "2024-01-20",
-    code: `def mean_reversion(data):
-    # Bollinger Bands
-    bb_upper, bb_middle, bb_lower = calculate_bb(data, period=20, std=2)
-    
-    # Z-score
-    z_score = (data['close'] - bb_middle) / (bb_upper - bb_middle)
-    
-    # Entry/Exit logic
-    if z_score < -1.5:
-        return 'BUY'
-    elif z_score > 1.5:
-        return 'SELL'
-    
-    return 'HOLD'`,
-    strategy: "Utilise les bandes de Bollinger et le z-score pour identifier les conditions de surachat/survente. Achète quand le prix est à 1.5 écart-type sous la moyenne, vend quand il est à 1.5 écart-type au-dessus.",
+    code: meanReversionCode,
+    strategy: meanReversionStrategy,
+    activationHistory: meanReversionActivationHistory,
     roi: 18.2,
     totalPnL: 9180,
     winRate: 72.8,
@@ -191,20 +188,9 @@ export const mockBots: Bot[] = [
     name: "Trend Follower Elite",
     description: "Suit les tendances de long terme avec confirmation multi-timeframe",
     startDate: "2024-01-10",
-    code: `def trend_following(data):
-    # Multiple timeframe analysis
-    ema_20 = data['close'].ewm(span=20).mean()
-    ema_50 = data['close'].ewm(span=50).mean()
-    ema_200 = data['close'].ewm(span=200).mean()
-    
-    # Trend confirmation
-    if ema_20 > ema_50 > ema_200:
-        return 'BUY'
-    elif ema_20 < ema_50 < ema_200:
-        return 'SELL'
-    
-    return 'HOLD'`,
-    strategy: "Stratégie de suivi de tendance utilisant trois moyennes mobiles exponentielles (20, 50, 200). Entre en position longue quand les EMAs sont alignées à la hausse, en position courte quand elles sont alignées à la baisse.",
+    code: trendFollowerCode,
+    strategy: trendFollowerStrategy,
+    activationHistory: trendFollowerActivationHistory,
     roi: 31.7,
     totalPnL: 19020,
     winRate: 58.4,
@@ -267,18 +253,9 @@ export const mockBots: Bot[] = [
     name: "Volatility Hunter",
     description: "Capitalise sur les périodes de forte volatilité",
     startDate: "2024-01-25",
-    code: `def volatility_strategy(data):
-    # ATR and volatility metrics
-    atr = calculate_atr(data, period=14)
-    volatility = data['close'].pct_change().rolling(20).std()
-    
-    # Breakout detection
-    if volatility > volatility.rolling(50).mean() * 1.5:
-        if data['close'] > data['high'].rolling(20).max():
-            return 'BUY'
-    
-    return 'HOLD'`,
-    strategy: "Détecte les périodes de forte volatilité et trade les breakouts. Utilise l'ATR et la volatilité historique pour identifier les opportunités. Entre en position lors des breakouts confirmés par une volatilité élevée.",
+    code: volatilityHunterCode,
+    strategy: volatilityHunterStrategy,
+    activationHistory: volatilityHunterActivationHistory,
     roi: 27.3,
     totalPnL: 13650,
     winRate: 61.2,

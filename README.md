@@ -71,3 +71,28 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Bot automation architecture
+
+Trading bots now live in `src/bots/<bot-slug>`.  
+Each folder contains:
+
+- `bot.ts` (or `.py` for prototypes): the executable script used both in CI and locally.
+- `strategy.md`: concise markdown explaining the trading playbook that powers the dashboard copy.
+- `history.json`: activation/deactivation log consumed by the UI.
+
+### Running bots locally (PowerShell)
+
+```powershell
+npm install
+npm run bot:momentum
+```
+
+The command loads `.env.local` automatically through the script, so keep your Firebase/Supabase/BOT credentials in that file.  
+Use the `npm run bot:<slug>` naming convention for any new bots you add under `src/bots`.
+
+### GitHub Actions
+
+`.github/workflows/run-bots.yml` still calls `npm run bot:momentum`; because the npm script now points to `src/bots/momentum/bot.ts`, no workflow changes are required beyond the updated repository layout.
+
+After each successful workflow run, `npm run bot:record-activation -- <slug> activated` is executed to append an event inside `src/bots/<slug>/history.json`. The workflow auto-commits that file back to the default branch, so activation dates seen in the UI always reflect the most recent CI execution.

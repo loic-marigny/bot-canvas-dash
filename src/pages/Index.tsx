@@ -5,6 +5,7 @@ import { Activity } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useMomentumBotStats } from "@/hooks/useMomentumBotStats";
+import { deriveBotLifecycleState } from "@/lib/botLifecycle";
 
 const Index = () => {
   const { t } = useTranslation();
@@ -15,9 +16,10 @@ const Index = () => {
     return mockBots.map((bot) => (bot.id === momentumOverride.id ? { ...bot, ...momentumOverride } : bot));
   }, [momentumOverride]);
 
+  const lifecycleStates = useMemo(() => bots.map((bot) => deriveBotLifecycleState(bot)), [bots]);
   const totalPnL = bots.reduce((acc, bot) => acc + bot.totalPnL, 0);
   const avgRoi = bots.reduce((acc, bot) => acc + bot.roi, 0) / bots.length;
-  const activeBots = bots.filter((bot) => bot.status === "active").length;
+  const activeBots = lifecycleStates.filter((state) => state.status === "active").length;
   const totalTrades = bots.reduce((acc, bot) => acc + bot.trades, 0);
 
   return (

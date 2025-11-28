@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
+import { deriveBotLifecycleState } from "@/lib/botLifecycle";
 
 interface BotCardProps {
   bot: Bot;
@@ -15,7 +16,9 @@ export const BotCard = ({ bot }: BotCardProps) => {
   const { t, i18n } = useTranslation();
   const isPositive = bot.roi >= 0;
   const locale = i18n.language === 'fr' ? fr : enUS;
-  const formattedDate = format(new Date(bot.startDate), 'PP', { locale });
+  const lifecycle = deriveBotLifecycleState(bot);
+  const runningSince = lifecycle.lastActivatedAt ?? bot.startDate;
+  const formattedDate = format(new Date(runningSince), 'PP', { locale });
   
   const statusColors = {
     active: "bg-success/20 text-success border-success/30",
@@ -43,8 +46,8 @@ export const BotCard = ({ bot }: BotCardProps) => {
               <span>{t('botCard.runningSince')} {formattedDate}</span>
             </div>
           </div>
-          <Badge className={statusColors[bot.status]}>
-            {statusLabels[bot.status]}
+          <Badge className={statusColors[lifecycle.status]}>
+            {statusLabels[lifecycle.status]}
           </Badge>
         </div>
 

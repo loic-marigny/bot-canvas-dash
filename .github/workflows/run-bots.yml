@@ -9,7 +9,7 @@ jobs:
   bots:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     env:
       VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
       VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
@@ -36,3 +36,24 @@ jobs:
 
       - name: Run Momentum Bot
         run: npm run bot:momentum
+
+      - name: Record activation history
+        if: success()
+        env:
+          BOT_HISTORY_REASON: "GitHub workflow run"
+          BOT_HISTORY_ACTOR: "${{ github.actor }}"
+          BOT_HISTORY_SOURCE: "${{ github.workflow }}"
+        run: npm run bot:record-activation -- momentum activated
+
+      - name: Commit activation history
+        if: success()
+        run: |
+          if git diff --quiet --exit-code -- src/bots/momentum/history.json; then
+            echo "No activation history change detected."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/bots/momentum/history.json
+          git commit -m "chore: update momentum activation history [skip ci]"
+          git push

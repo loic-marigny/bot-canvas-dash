@@ -14,6 +14,13 @@ export interface Trade {
   sellDate?: string;
 }
 
+export interface BotActivationEvent {
+  timestamp: string;
+  action: "activated" | "deactivated";
+  reason?: string;
+  actor?: string;
+}
+
 export interface Bot {
   id: string;
   name: string;
@@ -36,6 +43,7 @@ export interface Bot {
     marketValue: number;
     lastTradeAt?: string;
   };
+  activationHistory: BotActivationEvent[];
 }
 
 export interface PerformancePoint {
