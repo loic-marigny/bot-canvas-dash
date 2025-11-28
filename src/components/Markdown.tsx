@@ -13,8 +13,16 @@ export const Markdown = ({ className, ...props }: MarkdownProps) => (
       h2: ({ node, ...rest }) => <h2 className="text-xl font-semibold mt-4 mb-2" {...rest} />,
       h3: ({ node, ...rest }) => <h3 className="text-lg font-semibold mt-3 mb-1.5" {...rest} />,
       p: ({ node, ...rest }) => <p className="mb-3 leading-relaxed text-muted-foreground" {...rest} />,
-      ul: ({ node, ...rest }) => <ul className="list-disc pl-5 space-y-1 text-muted-foreground mb-3" {...rest} />,
-      ol: ({ node, ...rest }) => <ol className="list-decimal pl-5 space-y-1 text-muted-foreground mb-3" {...rest} />,
+      ul: ({ node, ordered, ...rest }) => {
+        const props = { ...rest };
+        delete (props as Record<string, unknown>).ordered;
+        return <ul className="list-disc pl-5 space-y-1 text-muted-foreground mb-3" {...props} />;
+      },
+      ol: ({ node, ordered, ...rest }) => {
+        const props = { ...rest };
+        delete (props as Record<string, unknown>).ordered;
+        return <ol className="list-decimal pl-5 space-y-1 text-muted-foreground mb-3" {...props} />;
+      },
       li: ({ node, ordered, ...rest }) => {
         const props = { ...rest };
         delete (props as Record<string, unknown>).ordered;

@@ -156,16 +156,16 @@ const BotDetail = () => {
           <PerformanceChart data={performanceData} />
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <Card className="p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[35%_auto] gap-8 mb-8 items-stretch">
+          <Card className="p-6 order-2 lg:order-1 flex flex-col">
             <h2 className="text-2xl font-bold mb-4">{t('botDetail.strategy')}</h2>
-            <Markdown className="space-y-3 text-sm text-foreground">{bot.strategy}</Markdown>
+            <Markdown className="space-y-3 text-sm text-foreground flex-1">{bot.strategy}</Markdown>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-6 order-1 lg:order-2">
             <h2 className="text-2xl font-bold mb-4">{t('botDetail.code')}</h2>
-            <pre className="bg-secondary p-4 rounded-lg overflow-x-auto text-sm">
-              <code className="text-foreground">{bot.code}</code>
+            <pre className="bg-secondary p-4 rounded-lg overflow-x-auto text-sm max-w-full" style={{ maxWidth: "100%" }}>
+              <code className="text-foreground block whitespace-pre-wrap break-words">{bot.code}</code>
             </pre>
           </Card>
         </div>
