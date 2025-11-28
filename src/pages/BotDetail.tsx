@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useWealthHistory } from "@/hooks/useWealthHistory";
 import { useMomentumBotStats } from "@/hooks/useMomentumBotStats";
 import { deriveBotLifecycleState } from "@/lib/botLifecycle";
+import { Markdown } from "@/components/Markdown";
 
 const BotDetail = () => {
   const { t, i18n } = useTranslation();
@@ -158,7 +159,7 @@ const BotDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <Card className="p-6">
             <h2 className="text-2xl font-bold mb-4">{t('botDetail.strategy')}</h2>
-            <p className="text-muted-foreground leading-relaxed">{bot.strategy}</p>
+            <Markdown className="space-y-3 text-sm text-foreground">{bot.strategy}</Markdown>
           </Card>
 
           <Card className="p-6">
